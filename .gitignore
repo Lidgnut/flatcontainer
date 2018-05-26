@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+/flatcont/Debug
+/flatcont/.vs/flatcont/v15
+/flatcont/flatcont-WINDOWS/Debug/flatcont-WINDOWS.tlog
+/flatcont/flatcont-WINDOWS/Debug
