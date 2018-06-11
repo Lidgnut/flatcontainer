@@ -8,9 +8,9 @@ namespace mwaack
 		typename Key,
 		typename Compare = std::less<Key>,
 		typename Allocator = std::allocator<Key>>
-		class flat_set : public flat_tree<Key, Compare, Allocator, false>
+		class flat_set : public flat_tree<Key, CompareInfo<Compare, Compare>, Allocator, false>
 	{
-		using MyBase = flat_tree<Key, Compare, Allocator, false>;
+		using MyBase = flat_tree<Key, CompareInfo<Compare, Compare>, Allocator, false>;
 
 	public:
 		using key_type = typename MyBase::key_type;
@@ -89,9 +89,9 @@ namespace mwaack
 		typename Key,
 		typename Compare = std::less<Key>,
 		typename Allocator = std::allocator<Key>>
-		class flat_multiset : public flat_tree<Key, Compare, Allocator, true>
+		class flat_multiset : public flat_tree<Key, CompareInfo<Compare, Compare>, Allocator, true>
 	{
-		using MyBase = flat_tree<Key, Compare, Allocator, true>;
+		using MyBase = flat_tree<Key, CompareInfo<Compare, Compare>, Allocator, true>;
 
 	public:
 		using key_type = typename MyBase::key_type;

@@ -2,11 +2,20 @@
 
 #include <vector>
 #include <algorithm>
+#include <iterator>
+
 
 namespace mwaack
 {
+	template <typename KeyCompare, typename ValueCompare>
+	struct CompareInfo
+	{
+		using key_compare = typename KeyCompare;
+		using value_compare = ValueCompare;
+	};
+
 	template<typename T,
-		typename Compare,
+		typename CompareI,
 		typename Allocator,
 		bool IsMulti>
 	class flat_tree
@@ -14,8 +23,8 @@ namespace mwaack
 		using data_type = std::vector<T, Allocator>;
 	public:
 		using key_type = T;
-		using key_compare = Compare;
-		using value_compare = Compare;
+		using key_compare = typename CompareI::key_compare;
+		using value_compare = typename CompareI::value_compare;
 		using value_type = T;
 		using size_type = typename data_type::size_type;
 		using difference_type = typename data_type::difference_type;
@@ -30,6 +39,7 @@ namespace mwaack
 		using const_reverse_iterator = typename std::reverse_iterator<const_iterator>;
 	private:
 		data_type m_data;
+		key_compare m_key_comp;
 		value_compare m_value_comp;
 
 	public:
@@ -37,8 +47,9 @@ namespace mwaack
 			: m_data()
 		{ }
 
-		explicit flat_tree(const Compare& comp, const Allocator& alloc = Allocator()) noexcept
+		explicit flat_tree(const CompareI& comp, const Allocator& alloc = Allocator()) noexcept
 			: m_data(alloc)
+			, m_key_comp(comp)
 			, m_value_comp(comp)
 		{ }
 
@@ -47,7 +58,7 @@ namespace mwaack
 		{ }
 
 		template< class InputIt >
-		flat_tree(InputIt first, InputIt last, const Compare& comp = Compare(), const Allocator& alloc = Allocator())
+		flat_tree(InputIt first, InputIt last, const CompareI& comp = CompareI(), const Allocator& alloc = Allocator())
 			: m_data(comp, alloc)
 		{
 			std::copy(first, last, std::inserter(*this, end()));
@@ -75,8 +86,9 @@ namespace mwaack
 			: m_data(std::move(other.m_data))
 		{ }
 
-		flat_tree(std::initializer_list<value_type> init, const Compare& comp, const Allocator& alloc = Allocator())
+		flat_tree(std::initializer_list<value_type> init, const CompareI& comp, const Allocator& alloc = Allocator())
 			: m_data(alloc)
+			, m_key_comp(comp)
 			, m_value_comp(comp)
 		{
 			std::copy(init.begin(), init.end(), std::inserter(*this, end()));
@@ -257,6 +269,7 @@ namespace mwaack
 		void insert(InputIt first, InputIt last)
 		{
 			const size_type currSize = m_data.size();
+			m_data.reserve(std::distance(first, last));
 			for (InputIt curr = first; curr != last; ++curr)
 				m_data.emplace_back(*curr);
 			std::inplace_merge(m_data.begin(), m_data.begin() + currSize, m_data.end());
@@ -265,6 +278,7 @@ namespace mwaack
 		void insert(std::initializer_list<value_type> ilist)
 		{
 			const size_type currSize = m_data.size();
+			m_data.reserve(ilist.size());
 			for (const auto& value : ilist)
 				m_data.emplace_back(value);
 			std::inplace_merge(m_data.begin(), m_data.begin() + currSize, m_data.end());
@@ -317,10 +331,10 @@ namespace mwaack
 			return range.second - range.first;
 		}
 
-		template<typename K, typename = Compare::is_transparent>
+		template<typename K, typename = CompareI::is_transparent>
 		size_type count(const K& x) const
 		{
-			return count(static_cast<typename Compare::is_transparent>(key));
+			return count(static_cast<typename CompareI::is_transparent>(key));
 		}
 
 		iterator find(const key_type& key)
@@ -349,16 +363,16 @@ namespace mwaack
 			}
 		}
 
-		template<typename K, typename = Compare::is_tranparent>
+		template<typename K, typename = CompareI::is_tranparent>
 		iterator find(const K& key)
 		{
-			return find(static_cast<typename Compare::is_transparent>(key));
+			return find(static_cast<typename CompareI::is_transparent>(key));
 		}
 
-		template<typename K, typename = Compare::is_tranparent>
+		template<typename K, typename = CompareI::is_tranparent>
 		iterator find(const K& key) const
 		{
-			return find(static_cast<typename Compare::is_transparent>(key));
+			return find(static_cast<typename CompareI::is_transparent>(key));
 		}
 
 
@@ -373,13 +387,13 @@ namespace mwaack
 			return std::equal_range(m_data.begin(), m_data.end(), key, [this](const value_type& lhs, const key_type& rhs) {return m_key_compare(lhs.first, rhs); });
 		}
 
-		template<typename K, typename = Compare::is_tranparent>
+		template<typename K, typename = CompareI::is_tranparent>
 		std::pair<iterator, iterator> equal_range(const K& key)
 		{
 			return std::equal_range(m_data.begin(), m_data.end(), key, m_value_comp);
 		}
 
-		template<typename K, typename = Compare::is_tranparent>
+		template<typename K, typename = CompareI::is_tranparent>
 		std::pair<const_iterator, const_iterator> equal_range(const K& key) const
 		{
 			return std::equal_range(m_data.begin(), m_data.end(), key, m_value_comp);
@@ -395,16 +409,16 @@ namespace mwaack
 			return std::lower_bound(m_data.begin(), m_data.end(), key, m_value_comp);
 		}
 
-		template<typename K, typename = Compare::is_tranparent>
+		template<typename K, typename = CompareI::is_tranparent>
 		iterator lower_bound(const K& key)
 		{
-			return lower_bound(static_cast<typename Compare::is_transparent>(key));
+			return lower_bound(static_cast<typename CompareI::is_transparent>(key));
 		}
 
-		template<typename K, typename = Compare::is_tranparent>
+		template<typename K, typename = CompareI::is_tranparent>
 		iterator lower_bound(const K& key) const
 		{
-			return lower_bound(static_cast<typename Compare::is_transparent>(key));
+			return lower_bound(static_cast<typename CompareI::is_transparent>(key));
 		}
 
 		iterator upper_bound(const key_type& key)
@@ -417,21 +431,21 @@ namespace mwaack
 			return std::upper_bound(m_data.begin(), m_data.end(), key, m_value_comp);
 		}
 
-		template<typename K, typename = Compare::is_tranparent>
+		template<typename K, typename = CompareI::is_tranparent>
 		iterator upper_bound(const K& key)
 		{
-			return upper_bound(static_cast<typename Compare::is_transparent>(key));
+			return upper_bound(static_cast<typename CompareI::is_transparent>(key));
 		}
 
-		template<typename K, typename = Compare::is_tranparent>
+		template<typename K, typename = CompareI::is_tranparent>
 		iterator upper_bound(const K& key) const
 		{
-			return upper_bound(static_cast<typename Compare::is_transparent>(key));
+			return upper_bound(static_cast<typename CompareI::is_transparent>(key));
 		}
 
 		key_compare key_comp() const
 		{
-			return m_value_comp;
+			return m_key_comp;
 		}
 
 		value_compare value_comp() const
