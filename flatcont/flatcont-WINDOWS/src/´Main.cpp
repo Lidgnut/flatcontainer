@@ -1,11 +1,11 @@
 
+
 #include "include/flat_tree.h"
 #include "include/flat_set.h"
 #include "include/flat_map.h"
 #include <iostream>
 
 #include <set>
-
 
 struct Test
 {
@@ -16,7 +16,8 @@ struct Test
 	}
 };
 
-int main()
+
+int main(int argc, char** argv)
 {
 	std::cout << "Hello World\n";
 
