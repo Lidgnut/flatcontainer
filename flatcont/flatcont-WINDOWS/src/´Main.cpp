@@ -48,11 +48,14 @@ int main(int argc, char** argv)
 
 	
 	mwaack::flat_map<int, int> map;
+	map.reserve(25);
 	map.insert(std::make_pair(0, 1));
 	map.insert(std::make_pair(1, 2));
 	map.insert(std::make_pair(2, 3));
 	map.insert(std::make_pair(3, 4));
 	map.insert(std::make_pair(2, 5));
+
+	map.try_emplace(25, 23);
 
 	std::cin.get();
 }

@@ -93,6 +93,63 @@ namespace mwaack
 			: MyBase(init, alloc)
 		{
 		}
+
+
+		template<typename M>
+		std::pair<iterator, bool> insert_or_assign(const key_type& key, M&& obj)
+		{
+			auto hintIt = std::lower_bound(m_data.begin(), m_data.end(), key, [this](const value_type& lhs, const key_type& rhs) {return m_key_compare(lhs.first, rhs); });
+			if (hintIt == m_data.end() || m_key_compare(key, hintIt->first))
+			{
+				*hintIt = std::forward<M>(obj);
+				return std::make_pair(hintIt, false);
+			}
+			else
+			{
+				return std::make_pair(m_data.insert(hintIt, value_type{ key, std::forward<M>(obj) }), true);
+			}
+		}
+
+		template<typename M>
+		std::pair<iterator, bool> insert_or_assign(key_type&& key, M&& obj)
+		{
+			auto hintIt = std::lower_bound(m_data.begin(), m_data.end(), key, [this](const value_type& lhs, const key_type& rhs) {return m_key_compare(lhs.first, rhs); });
+			if (hintIt == m_data.end() || m_key_compare(key, hintIt->first))
+			{
+				return std::make_pair(m_data.insert(hintIt, value_type{ std::forward<key_type>(key), std::forward<M>(obj) }), true);
+			}
+			else
+			{
+				hintIt->second = std::forward<M>(obj);
+				return std::make_pair(hintIt, false);
+			}
+		}
+
+
+		template<typename... Args>
+		std::pair<iterator, bool> try_emplace(const key_type& k, Args&&... args)
+		{
+			return this->insert(value_type{ std::piecewise_construct, std::forward_as_tuple(k), std::forward_as_tuple(std::forward<Args>(args)...) });
+		}
+
+		template<typename... Args>
+		std::pair<iterator, bool> try_emplace(key_type&& k, Args&&... args)
+		{
+			return this->insert(value_type{ std::piecewise_construct, std::forward_as_tuple(std::forward<key_type>(k)), std::forward_as_tuple(std::forward<Args>(args)...) });
+		}
+
+		template<typename... Args>
+		iterator try_emplace(const_iterator hint, const key_type& k, Args&&... args)
+		{
+			return this->insert(hint, value_type{ std::piecewise_construct, std::forward_as_tuple(k), std::forward_as_tuple(std::forward<Args>(args)...) });
+		}
+
+		template<typename... Args>
+		iterator try_emplace(const_iterator hint, key_type&& k, Args&&... args)
+		{
+			return this->insert(hint, value_type{ std::piecewise_construct, std::forward_as_tuple(std::forward<key_type>(k)), std::forward_as_tuple(std::forward<Args>(args)...) });
+		}
+
 	};
 
 	template<typename Key, typename Value, typename KeyCompare = std::less<Key>, typename Allocator = std::allocator<std::pair<Key, Value>>>
