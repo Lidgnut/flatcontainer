@@ -68,7 +68,7 @@ namespace mwaack
 			: MyBase(std::move(other))
 		{ }
 		flat_set(flat_set&& other, const Allocator& alloc)
-			: MyBase(std::move(other))
+			: MyBase(std::move(other), alloc)
 		{ }
 
 		flat_set(std::initializer_list<value_type> init, const Compare& comp, const Allocator& alloc = Allocator())

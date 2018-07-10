@@ -78,7 +78,7 @@ namespace mwaack
 		{ }
 
 		flat_map(flat_map&& other) noexcept
-			: MyBase(std::forward<flat_map>(other), alloc)
+			: MyBase(std::forward<flat_map>(other))
 		{ }
 		flat_map(flat_map&& other, const Allocator& alloc)
 			: MyBase(std::forward<flat_map>(other), alloc)
