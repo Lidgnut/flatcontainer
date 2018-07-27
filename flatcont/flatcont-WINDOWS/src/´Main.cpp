@@ -20,12 +20,12 @@ struct Test
 int main(int argc, char** argv)
 {
 	std::cout << "Hello World\n";
-
-	std::set<Test> tads;
-
+	
 	mwaack::flat_set<Test> set;
 	mwaack::flat_multiset<Test> multiSet;
 
+	mwaack::flat_set<Test> test;
+	test = set;
 
 	multiSet.insert(Test{ 3, 3 });
 	int p = 1;

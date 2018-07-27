@@ -88,6 +88,9 @@ namespace mwaack
 			: m_data(std::move(other.m_data))
 		{ }
 
+		flat_tree& operator=(const flat_tree&) = default;
+		flat_tree& operator=(flat_tree&&) = default;
+
 		flat_tree(std::initializer_list<value_type> init, const CompareI& comp, const Allocator& alloc = Allocator())
 			: m_data(alloc)
 			, m_key_comp(comp)
