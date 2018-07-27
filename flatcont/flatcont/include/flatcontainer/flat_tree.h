@@ -7,10 +7,12 @@
 
 namespace mwaack
 {
-	template <typename KeyCompare, typename ValueCompare>
+	template <typename KeyType, typename ValueType, typename KeyCompare, typename ValueCompare>
 	struct CompareInfo
 	{
-		using key_compare = typename KeyCompare;
+		using key_type = KeyType;
+		using value_type = ValueType;
+		using key_compare = KeyCompare;
 		using value_compare = ValueCompare;
 	};
 
@@ -22,10 +24,10 @@ namespace mwaack
 	{
 		using data_type = std::vector<T, Allocator>;
 	public:
-		using key_type = T;
+		using key_type = typename CompareI::key_type;
 		using key_compare = typename CompareI::key_compare;
 		using value_compare = typename CompareI::value_compare;
-		using value_type = T;
+		using value_type = typename CompareI::value_type;
 		using size_type = typename data_type::size_type;
 		using difference_type = typename data_type::difference_type;
 		using allocator_type = typename data_type::allocator_type;
@@ -134,7 +136,7 @@ namespace mwaack
 		{
 			return m_data.rbegin();
 		}
-		const_iterator rcbegin() noexcept
+		const_iterator crbegin() noexcept
 		{
 			return m_data.crbegin();
 		}
@@ -147,9 +149,9 @@ namespace mwaack
 		{
 			return m_data.rend();
 		}
-		const_reverse_iterator rcend() noexcept
+		const_reverse_iterator crend() noexcept
 		{
-			return m_data.rcend();
+			return m_data.crend();
 		}
 
 		bool empty() const
@@ -174,7 +176,7 @@ namespace mwaack
 
 		auto insert(const value_type& value)
 		{
-			auto hintIt = this->lower_bound(value);
+			auto hintIt = std::lower_bound(m_data.begin(), m_data.end(), value, m_value_comp);
 			if constexpr(IsMulti)
 			{
 				return this->insert(hintIt, value);
@@ -194,7 +196,7 @@ namespace mwaack
 
 		auto insert(value_type&& value)
 		{
-			auto hintIt = this->lower_bound(value);
+			auto hintIt = std::lower_bound(m_data.begin(), m_data.end(), value, m_value_comp);
 			if constexpr(IsMulti)
 			{
 				return this->insert(hintIt, std::forward<value_type>(value));
@@ -266,13 +268,24 @@ namespace mwaack
 
 
 		template<typename InputIt>
+		void move_from(InputIt first, InputIt last)
+		{
+			const size_type currSize = m_data.size();
+			m_data.reserve(std::distance(first, last));
+			for (InputIt curr = first; curr != last; ++curr)
+				m_data.emplace_back(std::move(*curr));
+			std::inplace_merge(m_data.begin(), m_data.begin() + currSize, m_data.end(), m_value_comp);
+		}
+
+
+		template<typename InputIt>
 		void insert(InputIt first, InputIt last)
 		{
 			const size_type currSize = m_data.size();
 			m_data.reserve(std::distance(first, last));
 			for (InputIt curr = first; curr != last; ++curr)
 				m_data.emplace_back(*curr);
-			std::inplace_merge(m_data.begin(), m_data.begin() + currSize, m_data.end());
+			std::inplace_merge(m_data.begin(), m_data.begin() + currSize, m_data.end(), m_value_comp);
 		}
 
 		void insert(std::initializer_list<value_type> ilist)
@@ -281,19 +294,19 @@ namespace mwaack
 			m_data.reserve(ilist.size());
 			for (const auto& value : ilist)
 				m_data.emplace_back(value);
-			std::inplace_merge(m_data.begin(), m_data.begin() + currSize, m_data.end());
+			std::inplace_merge(m_data.begin(), m_data.begin() + currSize, m_data.end(), m_value_comp);
 		}
 
 		template<typename... Args>
-		std::pair<iterator, bool> emplace(Args&&... args)
+		auto emplace(Args&&... args)
 		{
-			return insert(value_type{ std::forward<Args>(args)... });
+			return insert(value_type( std::forward<Args>(args)... ));
 		}
 
 		template<typename... Args>
 		iterator emplace_hint(const_iterator hint, Args&&... args)
 		{
-			return insert(hint, value_type{ std::forward<Args>(args)... });
+			return insert(hint, value_type( std::forward<Args>(args)... ));
 		}
 
 		iterator erase(iterator pos)
@@ -313,7 +326,7 @@ namespace mwaack
 
 		size_type erase(const key_type& key)
 		{
-			auto eraseIt = this->equal_range(key);
+			auto eraseIt = std::equal_range(m_data.begin(), m_data.end(), key, m_value_comp);
 			const size_type erasedElems = eraseIt.second - eraseIt.first;;
 			m_data.erase(eraseIt.first, eraseIt.second);
 			return erasedElems;
@@ -327,7 +340,7 @@ namespace mwaack
 
 		size_type count(const value_type& value) const
 		{
-			const auto range = this->equal_range(value);
+			const auto range = std::equal_range(m_data.begin(), m_data.end(), value, m_value_comp);
 			return range.second - range.first;
 		}
 
@@ -375,8 +388,6 @@ namespace mwaack
 			return find(static_cast<typename CompareI::is_transparent>(key));
 		}
 
-
-
 		std::pair<iterator, iterator> equal_range(const key_type& key)
 		{
 			return std::equal_range(m_data.begin(), m_data.end(), key, m_value_comp);
@@ -384,7 +395,7 @@ namespace mwaack
 
 		std::pair<const_iterator, const_iterator> equal_range(const key_type& key) const
 		{
-			return std::equal_range(m_data.begin(), m_data.end(), key, [this](const value_type& lhs, const key_type& rhs) {return m_key_compare(lhs.first, rhs); });
+			return std::equal_range(m_data.begin(), m_data.end(), key, m_value_comp);
 		}
 
 		template<typename K, typename = CompareI::is_tranparent>

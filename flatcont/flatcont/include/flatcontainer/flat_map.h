@@ -4,7 +4,7 @@
 
 namespace mwaack
 {
-	template <typename T, typename FirstCompare>
+	template <typename T, typename U, typename FirstCompare>
 	struct pair_compare
 	{
 		FirstCompare m_comp = FirstCompare{};
@@ -15,16 +15,26 @@ namespace mwaack
 			: m_comp(comp)
 		{ }
 
-		bool operator()(const T& lhs, const T& rhs)
+		bool operator()(const std::pair<T, U>& lhs, const T& rhs) const
+		{
+			return m_comp(lhs.first, rhs);
+		}
+
+		bool operator()(const T& lhs, const std::pair<T, U>& rhs) const
+		{
+			return m_comp(lhs, rhs.first);
+		}
+
+		bool operator()(const std::pair<T, U>& lhs, const std::pair<T, U>& rhs) const
 		{
 			return m_comp(lhs.first, rhs.first);
 		}
 	};
 
 	template<typename Key, typename Value, typename KeyCompare = std::less<Key>, typename Allocator = std::allocator<std::pair<Key, Value>>>
-	class flat_map : public flat_tree<std::pair<Key, Value>, CompareInfo<KeyCompare, pair_compare<std::pair<Key, Value>, KeyCompare>>, Allocator, false>
+	class flat_map : public flat_tree<std::pair<Key, Value>, CompareInfo<Key, std::pair<Key, Value>, KeyCompare, pair_compare<Key, Value, KeyCompare>>, Allocator, false>
 	{
-		using MyBase = flat_tree<std::pair<Key, Value>, CompareInfo<KeyCompare, pair_compare<std::pair<Key, Value>, KeyCompare>>, Allocator, false>;
+		using MyBase = flat_tree<std::pair<Key, Value>, CompareInfo<Key, std::pair<Key, Value>, KeyCompare, pair_compare<Key, Value, KeyCompare>>, Allocator, false>;
 
 	public:
 		using key_type = typename Key;
@@ -83,6 +93,9 @@ namespace mwaack
 		flat_map(flat_map&& other, const Allocator& alloc)
 			: MyBase(std::forward<flat_map>(other), alloc)
 		{ }
+
+		flat_map& operator=(const flat_map&) = default;
+		flat_map& operator=(flat_map&&) = default;
 
 		flat_map(std::initializer_list<value_type> init, const KeyCompare& comp, const Allocator& alloc = Allocator())
 			: MyBase(init, comp, alloc)
@@ -153,9 +166,9 @@ namespace mwaack
 	};
 
 	template<typename Key, typename Value, typename KeyCompare = std::less<Key>, typename Allocator = std::allocator<std::pair<Key, Value>>>
-	class flat_multimap : public flat_tree<std::pair<Key, Value>, CompareInfo<KeyCompare, pair_compare<std::pair<Key, Value>, KeyCompare>>, Allocator, true>
+	class flat_multimap : public flat_tree<std::pair<Key, Value>, CompareInfo<Key, std::pair<Key, Value>, KeyCompare, pair_compare<Key, Value, KeyCompare>>, Allocator, true>
 	{
-		using MyBase = flat_tree<std::pair<Key, Value>, CompareInfo<KeyCompare, pair_compare<std::pair<Key, Value>, KeyCompare>>, Allocator, true>;
+		using MyBase = flat_tree<std::pair<Key, Value>, CompareInfo<Key, std::pair<Key, Value>, KeyCompare, pair_compare<Key, Value, KeyCompare>>, Allocator, true>;
 
 	public:
 		using key_type = typename Key;
@@ -177,7 +190,7 @@ namespace mwaack
 
 
 		flat_multimap()
-			: MyBase()
+			//: MyBase()
 		{ }
 
 		explicit flat_multimap(const KeyCompare& comp, const Allocator& alloc = Allocator()) noexcept
@@ -214,6 +227,9 @@ namespace mwaack
 		flat_multimap(flat_multimap&& other, const Allocator& alloc)
 			: MyBase(std::forward<flat_map>(other), alloc)
 		{ }
+
+		flat_multimap& operator=(const flat_multimap&) = default; 
+		flat_multimap& operator=(flat_multimap&&) = default;
 
 		flat_multimap(std::initializer_list<value_type> init, const KeyCompare& comp, const Allocator& alloc = Allocator())
 			: MyBase(init, comp, alloc)

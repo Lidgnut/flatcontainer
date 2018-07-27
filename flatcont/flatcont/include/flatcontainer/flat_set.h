@@ -8,9 +8,9 @@ namespace mwaack
 		typename Key,
 		typename Compare = std::less<Key>,
 		typename Allocator = std::allocator<Key>>
-		class flat_set : public flat_tree<Key, CompareInfo<Compare, Compare>, Allocator, false>
+		class flat_set : public flat_tree<Key, CompareInfo<Key, Key, Compare, Compare>, Allocator, false>
 	{
-		using MyBase = flat_tree<Key, CompareInfo<Compare, Compare>, Allocator, false>;
+		using MyBase = flat_tree<Key, CompareInfo<Key, Key, Compare, Compare>, Allocator, false>;
 
 	public:
 		using key_type = typename MyBase::key_type;
@@ -71,6 +71,9 @@ namespace mwaack
 			: MyBase(std::move(other), alloc)
 		{ }
 
+		flat_set& operator=(const flat_set&) = default;
+		flat_set& operator=(flat_set&&) = default;
+
 		flat_set(std::initializer_list<value_type> init, const Compare& comp, const Allocator& alloc = Allocator())
 			: MyBase(init, comp, alloc)
 		{
@@ -89,9 +92,9 @@ namespace mwaack
 		typename Key,
 		typename Compare = std::less<Key>,
 		typename Allocator = std::allocator<Key>>
-		class flat_multiset : public flat_tree<Key, CompareInfo<Compare, Compare>, Allocator, true>
+		class flat_multiset : public flat_tree<Key, CompareInfo<Key, Key, Compare, Compare>, Allocator, true>
 	{
-		using MyBase = flat_tree<Key, CompareInfo<Compare, Compare>, Allocator, true>;
+		using MyBase = flat_tree<Key, CompareInfo<Key, Key, Compare, Compare>, Allocator, true>;
 
 	public:
 		using key_type = typename MyBase::key_type;
@@ -151,6 +154,9 @@ namespace mwaack
 		flat_multiset(flat_multiset&& other, const Allocator& alloc)
 			: MyBase(std::move(other), alloc)
 		{ }
+
+		flat_multiset& operator=(const flat_multiset&) = default;
+		flat_multiset& operator=(flat_multiset&&) = default;
 
 		flat_multiset(std::initializer_list<value_type> init, const Compare& comp, const Allocator& alloc = Allocator())
 			: MyBase(init, comp, alloc)
