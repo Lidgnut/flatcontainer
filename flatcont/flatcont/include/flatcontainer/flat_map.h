@@ -222,10 +222,10 @@ namespace mwaack
 		{ }
 
 		flat_multimap(flat_multimap&& other) noexcept
-			: MyBase(std::forward<flat_map>(other), alloc)
+			: MyBase(std::forward<flat_multimap>(other))
 		{ }
 		flat_multimap(flat_multimap&& other, const Allocator& alloc)
-			: MyBase(std::forward<flat_map>(other), alloc)
+			: MyBase(std::forward<flat_multimap>(other), alloc)
 		{ }
 
 		flat_multimap& operator=(const flat_multimap&) = default; 
