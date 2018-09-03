@@ -8,9 +8,9 @@ namespace mwaack
 		typename Key,
 		typename Compare = std::less<Key>,
 		typename Allocator = std::allocator<Key>>
-		class flat_set : public flat_tree<Key, CompareInfo<Key, Key, Compare, Compare>, Allocator, false>
+		class flat_set : public flat_tree<Key, detail::CompareInfo<Key, Key, Compare, Compare>, Allocator, false>
 	{
-		using MyBase = flat_tree<Key, CompareInfo<Key, Key, Compare, Compare>, Allocator, false>;
+		using MyBase = flat_tree<Key, detail::CompareInfo<Key, Key, Compare, Compare>, Allocator, false>;
 
 	public:
 		using key_type = typename MyBase::key_type;
@@ -92,9 +92,9 @@ namespace mwaack
 		typename Key,
 		typename Compare = std::less<Key>,
 		typename Allocator = std::allocator<Key>>
-		class flat_multiset : public flat_tree<Key, CompareInfo<Key, Key, Compare, Compare>, Allocator, true>
+		class flat_multiset : public flat_tree<Key, detail::CompareInfo<Key, Key, Compare, Compare>, Allocator, true>
 	{
-		using MyBase = flat_tree<Key, CompareInfo<Key, Key, Compare, Compare>, Allocator, true>;
+		using MyBase = flat_tree<Key, detail::CompareInfo<Key, Key, Compare, Compare>, Allocator, true>;
 
 	public:
 		using key_type = typename MyBase::key_type;
@@ -128,7 +128,7 @@ namespace mwaack
 
 		template< class InputIt >
 		flat_multiset(InputIt first, InputIt last, const Compare& comp = Compare(), const Allocator& alloc = Allocator())
-			: MyBase(first, lasts, comp, alloc)
+			: MyBase(first, last, comp, alloc)
 		{
 			//std::copy(first, last, std::inserter(*this, this->end()));
 		}

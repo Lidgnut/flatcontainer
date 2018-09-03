@@ -4,6 +4,7 @@
 #include "include/flatcontainer/flat_set.h"
 #include "include/flatcontainer/flat_map.h"
 #include <iostream>
+#include <iomanip>
 
 #include <set>
 
@@ -16,46 +17,119 @@ struct Test
 	}
 };
 
+//template <typename T, typename U, typename Enable = void>
+//class MyIteratorWrapper
+//{
+//public:
+//	MyIteratorWrapper() = delete;
+//	MyIteratorWrapper(const MyIteratorWrapper&) = delete;
+//	MyIteratorWrapper& operator=(const MyIteratorWrapper&) = delete;
+//	~MyIteratorWrapper() = delete;
+//};
+//
+//template <typename T, typename U>
+//class MyIteratorWrapper<T, U, std::enable_if_t<std::is_same_v<typename T::value_type, std::remove_const_t<U>>>> : private T
+//{
+//public:
+//	using difference_type = typename T::difference_type;
+//	using value_type = U;
+//	using pointer = U*;
+//	using reference = U&;
+//	using iterator_category = typename T::iterator_category;
+//
+//	MyIteratorWrapper() = default;
+//	explicit MyIteratorWrapper(const T& other)
+//		: T(other)
+//	{
+//	}
+//	MyIteratorWrapper(const MyIteratorWrapper&) = default;
+//	MyIteratorWrapper& operator=(const MyIteratorWrapper&) = default;
+//	~MyIteratorWrapper() = default;
+//
+//	U& operator*()
+//	{
+//		return *reinterpret_cast<U*>(&T::operator*());
+//	}
+//
+//	const U& operator*() const
+//	{
+//		return *reinterpret_cast<U*>(&T::operator*());
+//	}
+//
+//	U* operator->()
+//	{
+//		return reinterpret_cast<U*>(&T::operator*());
+//	}
+//
+//	const U* operator->() const
+//	{
+//		return reinterpret_cast<U*>(&T::operator*());
+//	}
+//};
+//
+//template <typename T, typename U1, typename U2>
+//class MyIteratorWrapper<T, std::pair<U1, U2>, typename std::enable_if_t<std::is_same_v<typename T::value_type::first_type, std::remove_cv_t<U1>> && std::is_same_v<typename T::value_type::second_type, std::remove_cv_t<U2>>>> : private T
+//{
+//public:
+//	using difference_type = typename T::difference_type;
+//	using value_type = std::pair<U1, U2>;
+//	using pointer = std::pair<U1, U2>*;
+//	using reference = std::pair<U1, U2>&;
+//	using iterator_category = typename T::iterator_category;
+//
+//	MyIteratorWrapper() = default;
+//	explicit MyIteratorWrapper(const T& other)
+//		: T(other)
+//	{
+//	}
+//	MyIteratorWrapper(const MyIteratorWrapper&) = default;
+//	MyIteratorWrapper& operator=(const MyIteratorWrapper&) = default;
+//	~MyIteratorWrapper() = default;
+//
+//	std::pair<U1, U2>& operator*()
+//	{
+//		return *reinterpret_cast<std::pair<U1, U2>*>(&T::operator*());
+//	}
+//
+//	const std::pair<U1, U2>& operator*() const
+//	{
+//		return *reinterpret_cast<std::pair<U1, U2>*>(&T::operator*());
+//	}
+//
+//	std::pair<U1, U2>* operator->()
+//	{
+//		return reinterpret_cast<std::pair<U1, U2>*>(&T::operator*());
+//	}
+//
+//	const std::pair<U1, U2>* operator->() const
+//	{
+//		return reinterpret_cast<std::pair<U1, U2>*>(&T::operator*());
+//	}
+//};
+
+template <typename T, typename U>
+struct PairWrapper
+{
+	PairWrapper(std::pair<T, U>& pair)
+		: first(pair.first)
+		, second(pair.second)
+	{
+
+	}
+	const T& first;
+	U& second;
+};
+
 
 int main(int argc, char** argv)
 {
 	std::cout << "Hello World\n";
 	
-	mwaack::flat_set<Test> set;
-	mwaack::flat_multiset<Test> multiSet;
-
-	mwaack::flat_set<Test> test;
-	test = set;
-
-	multiSet.insert(Test{ 3, 3 });
-	int p = 1;
-	multiSet.insert(Test{ p, 1 });
-	multiSet.insert(Test{ p, 2 });
-	multiSet.insert(Test{ p, 3 });
-
-	multiSet.insert(Test{ 2, 1 });
-
-
-	set.insert(Test{ 3, 3 });
-	//int p = 1;
-	set.insert(Test{ p, 1 });
-	set.insert(Test{ p, 2 });
-	set.insert(Test{ p, 3 });
-
-	set.insert(Test{ 2, 1 });
-
-	//std::cout << set.erase(Test{p}) << '\n';
-
-	
 	mwaack::flat_map<int, int> map;
-	map.reserve(25);
-	map.insert(std::make_pair(0, 1));
-	map.insert(std::make_pair(1, 2));
-	map.insert(std::make_pair(2, 3));
-	map.insert(std::make_pair(3, 4));
-	map.insert(std::make_pair(2, 5));
-
-	map.try_emplace(25, 23);
-
+	for (int i = 0; i < 100; map.emplace(i, i), ++i);
+	for (auto& iter : map)
+	{
+		std::cout << std::setw(8) << iter.first + iter.second;
+	}
 	std::cin.get();
 }

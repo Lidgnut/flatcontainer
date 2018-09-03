@@ -2,7 +2,7 @@
 
 #include "flat_tree.h"
 
-namespace mwaack
+namespace mwaack::detail
 {
 	template <typename T, typename U, typename FirstCompare>
 	struct pair_compare
@@ -31,10 +31,117 @@ namespace mwaack
 		}
 	};
 
-	template<typename Key, typename Value, typename KeyCompare = std::less<Key>, typename Allocator = std::allocator<std::pair<Key, Value>>>
-	class flat_map : public flat_tree<std::pair<Key, Value>, CompareInfo<Key, std::pair<Key, Value>, KeyCompare, pair_compare<Key, Value, KeyCompare>>, Allocator, false>
+	template <typename T, typename U, typename Enable = void>
+	class IterWrapper
 	{
-		using MyBase = flat_tree<std::pair<Key, Value>, CompareInfo<Key, std::pair<Key, Value>, KeyCompare, pair_compare<Key, Value, KeyCompare>>, Allocator, false>;
+	public:
+		IterWrapper() = delete;
+		IterWrapper(const IterWrapper&) = delete;
+		IterWrapper& operator=(const IterWrapper&) = delete;
+		~IterWrapper() = delete;
+	};
+
+	template <typename T, typename U>
+	class IterWrapper<T, U, std::enable_if_t<std::is_same_v<typename T::value_type, std::remove_const_t<U>>>> : public T
+	{
+	public:
+		using difference_type = typename T::difference_type;
+		using value_type = U;
+		using pointer = U * ;
+		using reference = U & ;
+		using iterator_category = typename T::iterator_category;
+
+		IterWrapper() = default;
+		explicit IterWrapper(const T& other)
+			: T(other)
+		{
+		}
+
+		IterWrapper(const IterWrapper&) = default;
+		IterWrapper& operator=(const IterWrapper&) = default;
+		~IterWrapper() = default;
+
+		U& operator*()
+		{
+			return *reinterpret_cast<U*>(&T::operator*());
+		}
+
+		const U& operator*() const
+		{
+			return *reinterpret_cast<U*>(&T::operator*());
+		}
+
+		U* operator->()
+		{
+			return reinterpret_cast<U*>(&T::operator*());
+		}
+
+		const U* operator->() const
+		{
+			return reinterpret_cast<U*>(&T::operator*());
+		}
+	};
+
+	template <typename T, typename U1, typename U2>
+	class IterWrapper<T, std::pair<U1, U2>, typename std::enable_if_t<std::is_same_v<typename T::value_type::first_type, std::remove_cv_t<U1>> && std::is_same_v<typename T::value_type::second_type, std::remove_cv_t<U2>>>> : public T
+	{
+	public:
+		using difference_type = typename T::difference_type;
+		using value_type = std::pair<U1, U2>;
+		using pointer = std::pair<U1, U2>*;
+		using reference = std::pair<U1, U2>&;
+		using iterator_category = typename T::iterator_category;
+
+		//using T::operator==;
+		//using T::operator!=;
+		//using T::operator<=;
+		//using T::operator>=;
+		//using T::operator<;
+		//using T::operator>;
+		//using T::operator--;
+		//using T::operator++;
+		//using T::operator+;
+		//using T::operator+=;
+		//using T::operator-;
+		//using T::operator-=;
+		//using T::operator[];
+
+		IterWrapper() = default;
+		explicit IterWrapper(const T& other)
+			: T(other)
+		{
+		}
+		IterWrapper(const IterWrapper&) = default;
+		IterWrapper& operator=(const IterWrapper&) = default;
+		~IterWrapper() = default;
+
+		std::pair<U1, U2>& operator*()
+		{
+			return *reinterpret_cast<std::pair<U1, U2>*>(&T::operator*());
+		}
+
+		const std::pair<U1, U2>& operator*() const
+		{
+			return *reinterpret_cast<std::pair<U1, U2>*>(&T::operator*());
+		}
+
+		std::pair<U1, U2>* operator->()
+		{
+			return reinterpret_cast<std::pair<U1, U2>*>(&T::operator*());
+		}
+
+		const std::pair<U1, U2>* operator->() const
+		{
+			return reinterpret_cast<std::pair<U1, U2>*>(&T::operator*());
+		}
+	};
+}
+namespace mwaack
+{
+	template<typename Key, typename Value, typename KeyCompare = std::less<Key>, typename Allocator = std::allocator<std::pair<Key, Value>>>
+	class flat_map : public flat_tree<std::pair<Key, Value>, detail::CompareInfo<Key, std::pair<Key, Value>, KeyCompare, detail::pair_compare<Key, Value, KeyCompare>>, Allocator, false>
+	{
+		using MyBase = flat_tree<std::pair<Key, Value>, detail::CompareInfo<Key, std::pair<Key, Value>, KeyCompare, detail::pair_compare<Key, Value, KeyCompare>>, Allocator, false>;
 
 	public:
 		using key_type = typename Key;
@@ -49,11 +156,10 @@ namespace mwaack
 		using const_reference = typename MyBase::const_reference;
 		using pointer = typename MyBase::pointer;
 		using const_pointer = typename MyBase::const_pointer;
-		using iterator = typename MyBase::iterator;
-		using const_iterator = typename MyBase::const_iterator;
-		using reverse_iterator = typename std::reverse_iterator<iterator>;
-		using const_reverse_iterator = typename std::reverse_iterator<const_iterator>;
-
+		using iterator = detail::IterWrapper<typename MyBase::iterator, std::pair<const Key, Value>>;
+		using const_iterator = detail::IterWrapper<typename MyBase::const_iterator, std::pair<const Key, Value>>;
+		using reverse_iterator = detail::IterWrapper<typename std::reverse_iterator<iterator>, std::pair<const Key, Value>>;
+		using const_reverse_iterator = detail::IterWrapper<typename std::reverse_iterator<const_iterator>, std::pair<const Key, Value>>;
 
 		flat_map()
 			: MyBase()
@@ -108,28 +214,81 @@ namespace mwaack
 		}
 
 
+		iterator begin() noexcept
+		{
+			return iterator(MyBase::begin());
+		}
+		const_iterator begin() const noexcept
+		{
+			return const_iterator(MyBase::begin());
+		}
+		const_iterator cbegin() noexcept
+		{
+			return const_iterator(MyBase::cbegin());
+		}
+
+		iterator end() noexcept
+		{
+			return iterator(MyBase::end());
+		}
+		const_iterator end() const noexcept
+		{
+			return const_iterator(MyBase::end());
+		}
+		const_iterator cend() noexcept
+		{
+			return const_iterator(MyBase::cend());
+		}
+
+		reverse_iterator rbegin() noexcept
+		{
+			return reverse_iterator(MyBase::rbegin());
+		}
+		const_reverse_iterator rbegin() const noexcept
+		{
+			return const_reverse_iterator(MyBase::rbegin());
+		}
+		const_reverse_iterator crbegin() noexcept
+		{
+			return const_reverse_iterator(MyBase::crbegin());
+		}
+
+		reverse_iterator rend() noexcept
+		{
+			return reverse_iterator(MyBase::rend());
+		}
+		const_reverse_iterator rend() const noexcept
+		{
+			return const_reverse_iterator(MyBase::rend());
+		}
+		const_reverse_iterator crend() noexcept
+		{
+			return const_reverse_iterator(MyBase::crend());
+		}
+
+
 		template<typename M>
 		std::pair<iterator, bool> insert_or_assign(const key_type& key, M&& obj)
 		{
-			auto hintIt = std::lower_bound(m_data.begin(), m_data.end(), key, [this](const value_type& lhs, const key_type& rhs) {return m_key_compare(lhs.first, rhs); });
-			if (hintIt == m_data.end() || m_key_compare(key, hintIt->first))
+			auto hintIt = std::lower_bound(this->begin(), this->end(), key, [this](const value_type& lhs, const key_type& rhs) {return m_key_compare(lhs.first, rhs); });
+			if (hintIt == this->end() || m_key_compare(key, hintIt->first))
 			{
 				*hintIt = std::forward<M>(obj);
 				return std::make_pair(hintIt, false);
 			}
 			else
 			{
-				return std::make_pair(m_data.insert(hintIt, value_type{ key, std::forward<M>(obj) }), true);
+				return std::make_pair(this->m_data.insert(hintIt, value_type{ key, std::forward<M>(obj) }), true);
 			}
 		}
 
 		template<typename M>
 		std::pair<iterator, bool> insert_or_assign(key_type&& key, M&& obj)
 		{
-			auto hintIt = std::lower_bound(m_data.begin(), m_data.end(), key, [this](const value_type& lhs, const key_type& rhs) {return m_key_compare(lhs.first, rhs); });
-			if (hintIt == m_data.end() || m_key_compare(key, hintIt->first))
+			auto hintIt = std::lower_bound(this->begin(), this->end(), key, [this](const value_type& lhs, const key_type& rhs) {return m_key_compare(lhs.first, rhs); });
+			if (hintIt == this->end() || m_key_compare(key, hintIt->first))
 			{
-				return std::make_pair(m_data.insert(hintIt, value_type{ std::forward<key_type>(key), std::forward<M>(obj) }), true);
+				return std::make_pair(this->m_data.insert(hintIt, value_type{ std::forward<key_type>(key), std::forward<M>(obj) }), true);
 			}
 			else
 			{
@@ -166,9 +325,9 @@ namespace mwaack
 	};
 
 	template<typename Key, typename Value, typename KeyCompare = std::less<Key>, typename Allocator = std::allocator<std::pair<Key, Value>>>
-	class flat_multimap : public flat_tree<std::pair<Key, Value>, CompareInfo<Key, std::pair<Key, Value>, KeyCompare, pair_compare<Key, Value, KeyCompare>>, Allocator, true>
+	class flat_multimap : public flat_tree<std::pair<Key, Value>, detail::CompareInfo<Key, std::pair<Key, Value>, KeyCompare, detail::pair_compare<Key, Value, KeyCompare>>, Allocator, true>
 	{
-		using MyBase = flat_tree<std::pair<Key, Value>, CompareInfo<Key, std::pair<Key, Value>, KeyCompare, pair_compare<Key, Value, KeyCompare>>, Allocator, true>;
+		using MyBase = flat_tree < std::pair<Key, Value>, detail::CompareInfo < Key, std::pair<Key, Value>, KeyCompare, detail::pair_compare<Key, Value, KeyCompare >> , Allocator, true > ;
 
 	public:
 		using key_type = typename Key;
@@ -183,10 +342,10 @@ namespace mwaack
 		using const_reference = typename MyBase::const_reference;
 		using pointer = typename MyBase::pointer;
 		using const_pointer = typename MyBase::const_pointer;
-		using iterator = typename MyBase::iterator;
-		using const_iterator = typename MyBase::const_iterator;
-		using reverse_iterator = typename std::reverse_iterator<iterator>;
-		using const_reverse_iterator = typename std::reverse_iterator<const_iterator>;
+		using iterator = detail::IterWrapper<typename MyBase::iterator, std::pair<const Key, Value>>;
+		using const_iterator = detail::IterWrapper<typename MyBase::const_iterator, std::pair<const Key, Value>>;
+		using reverse_iterator = detail::IterWrapper<typename std::reverse_iterator<iterator>, std::pair<const Key, Value>>;
+		using const_reverse_iterator = detail::IterWrapper<typename std::reverse_iterator<const_iterator>, std::pair<const Key, Value>>;
 
 
 		flat_multimap()
@@ -239,6 +398,58 @@ namespace mwaack
 		flat_multimap(std::initializer_list<value_type> init, const Allocator& alloc = Allocator())
 			: MyBase(init, alloc)
 		{
+		}
+
+		iterator begin() noexcept
+		{
+			return iterator(MyBase::begin());
+		}
+		const_iterator begin() const noexcept
+		{
+			return const_iterator(MyBase::begin());
+		}
+		const_iterator cbegin() noexcept
+		{
+			return const_iterator(MyBase::cbegin());
+		}
+
+		iterator end() noexcept
+		{
+			return iterator(MyBase::end());
+		}
+		const_iterator end() const noexcept
+		{
+			return const_iterator(MyBase::end());
+		}
+		const_iterator cend() noexcept
+		{
+			return const_iterator(MyBase::cend());
+		}
+
+		reverse_iterator rbegin() noexcept
+		{
+			return reverse_iterator(MyBase::rbegin());
+		}
+		const_reverse_iterator rbegin() const noexcept
+		{
+			return const_reverse_iterator(MyBase::rbegin());
+		}
+		const_reverse_iterator crbegin() noexcept
+		{
+			return const_reverse_iterator(MyBase::crbegin());
+		}
+
+		reverse_iterator rend() noexcept
+		{
+			return reverse_iterator(MyBase::rend());
+		}
+		const_reverse_iterator rend() const noexcept
+		{
+			return const_reverse_iterator(MyBase::rend());
+		}
+		const_reverse_iterator crend() noexcept
+		{
+			return const_reverse_iterator(MyBase::crend());
 		}
 	};
 }

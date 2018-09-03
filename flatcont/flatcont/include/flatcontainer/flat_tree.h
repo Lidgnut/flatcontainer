@@ -5,7 +5,7 @@
 #include <iterator>
 
 
-namespace mwaack
+namespace mwaack::detail
 {
 	template <typename KeyType, typename ValueType, typename KeyCompare, typename ValueCompare>
 	struct CompareInfo
@@ -15,7 +15,9 @@ namespace mwaack
 		using key_compare = KeyCompare;
 		using value_compare = ValueCompare;
 	};
-
+}
+namespace mwaack
+{
 	template<typename T,
 		typename CompareI,
 		typename Allocator,
@@ -139,7 +141,7 @@ namespace mwaack
 		{
 			return m_data.rbegin();
 		}
-		const_iterator crbegin() noexcept
+		const_reverse_iterator crbegin() noexcept
 		{
 			return m_data.crbegin();
 		}
@@ -348,7 +350,7 @@ namespace mwaack
 		}
 
 		template<typename K, typename = CompareI::is_transparent>
-		size_type count(const K& x) const
+		size_type count(const K& key) const
 		{
 			return count(static_cast<typename CompareI::is_transparent>(key));
 		}
