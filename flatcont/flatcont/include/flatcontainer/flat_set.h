@@ -94,6 +94,7 @@ namespace mwaack
 		typename Allocator = std::allocator<Key>>
 		class flat_multiset : public flat_tree<Key, detail::CompareInfo<Key, Key, Compare, Compare>, Allocator, true>
 	{
+
 		using MyBase = flat_tree<Key, detail::CompareInfo<Key, Key, Compare, Compare>, Allocator, true>;
 
 	public:
@@ -127,7 +128,7 @@ namespace mwaack
 		{ }
 
 		template< class InputIt >
-		flat_multiset(InputIt first, InputIt last, const Compare& comp = Compare(), const Allocator& alloc = Allocator())
+		flat_multiset(InputIt first, InputIt last, const Compare& comp, const Allocator& alloc = Allocator())
 			: MyBase(first, last, comp, alloc)
 		{
 			//std::copy(first, last, std::inserter(*this, this->end()));
