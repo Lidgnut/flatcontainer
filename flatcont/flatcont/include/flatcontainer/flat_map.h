@@ -31,6 +31,99 @@ namespace mwaack::detail
 		}
 	};
 
+
+	template <typename T, typename U, typename Enable = void>
+	class ConstIterWrapper
+	{
+	public:
+		ConstIterWrapper() = delete;
+		ConstIterWrapper(const ConstIterWrapper&) = delete;
+		ConstIterWrapper& operator=(const ConstIterWrapper&) = delete;
+		~ConstIterWrapper() = delete;
+	};
+
+	template <typename T, typename U>
+	class ConstIterWrapper<T, U, std::enable_if_t<std::is_same_v<typename T::value_type, std::remove_const_t<U>>>> : public T
+	{
+	public:
+		using difference_type = typename T::difference_type;
+		using value_type = const U;
+		using pointer = U * ;
+		using reference = U & ;
+		using iterator_category = typename T::iterator_category;
+
+		ConstIterWrapper() = default;
+		explicit ConstIterWrapper(const T& other)
+			: T(other)
+		{
+		}
+		ConstIterWrapper(const ConstIterWrapper&) = default;
+		ConstIterWrapper& operator=(const ConstIterWrapper&) = default;
+		~ConstIterWrapper() = default;
+
+		const U& operator*()
+		{
+			return *reinterpret_cast<U*>(&T::operator*());
+		}
+
+		const U* operator->()
+		{
+			return reinterpret_cast<U*>(&T::operator*());
+		}
+
+		const U& operator*() const
+		{
+			return *reinterpret_cast<U*>(&T::operator*());
+		}
+
+		const U* operator->() const
+		{
+			return reinterpret_cast<U*>(&T::operator*());
+		}
+
+	};
+
+	template <typename T, typename U1, typename U2>
+	class ConstIterWrapper<T, std::pair<U1, U2>, typename std::enable_if_t<std::is_same_v<typename T::value_type::first_type, std::remove_cv_t<U1>> && std::is_same_v<typename T::value_type::second_type, std::remove_cv_t<U2>>>> : public T
+	{
+	public:
+		using difference_type = typename T::difference_type;
+		using value_type = std::pair<U1, U2>;
+		using pointer = std::pair<U1, U2>*;
+		using reference = std::pair<U1, U2>&;
+		using iterator_category = typename T::iterator_category;
+
+		ConstIterWrapper() = default;
+		explicit ConstIterWrapper(const T& other)
+			: T(other)
+		{
+		}
+		ConstIterWrapper(const ConstIterWrapper&) = default;
+		ConstIterWrapper& operator=(const ConstIterWrapper&) = default;
+		~ConstIterWrapper() = default;
+
+		const std::pair<U1, U2>& operator*()
+		{
+			return *reinterpret_cast<const std::pair<U1, U2>*>(&T::operator*());
+		}
+
+		const std::pair<U1, U2>* operator->()
+		{
+			return reinterpret_cast<const std::pair<U1, U2>*>(&T::operator*());
+		}
+
+		const std::pair<U1, U2>& operator*() const
+		{
+			return *reinterpret_cast<const std::pair<U1, U2>*>(&T::operator*());
+		}
+
+		const std::pair<U1, U2>* operator->() const
+		{
+			return reinterpret_cast<const std::pair<U1, U2>*>(&T::operator*());
+		}
+
+	};
+
 	template <typename T, typename U, typename Enable = void>
 	class IterWrapper
 	{
@@ -40,6 +133,8 @@ namespace mwaack::detail
 		IterWrapper& operator=(const IterWrapper&) = delete;
 		~IterWrapper() = delete;
 	};
+
+	
 
 	template <typename T, typename U>
 	class IterWrapper<T, U, std::enable_if_t<std::is_same_v<typename T::value_type, std::remove_const_t<U>>>> : public T
@@ -66,17 +161,17 @@ namespace mwaack::detail
 			return *reinterpret_cast<U*>(&T::operator*());
 		}
 
-		const U& operator*() const
-		{
-			return *reinterpret_cast<U*>(&T::operator*());
-		}
-
 		U* operator->()
 		{
 			return reinterpret_cast<U*>(&T::operator*());
 		}
 
-		const U* operator->() const
+		U& operator*() const
+		{
+			return *reinterpret_cast<U*>(&T::operator*());
+		}
+
+		U* operator->() const
 		{
 			return reinterpret_cast<U*>(&T::operator*());
 		}
@@ -92,20 +187,6 @@ namespace mwaack::detail
 		using reference = std::pair<U1, U2>&;
 		using iterator_category = typename T::iterator_category;
 
-		//using T::operator==;
-		//using T::operator!=;
-		//using T::operator<=;
-		//using T::operator>=;
-		//using T::operator<;
-		//using T::operator>;
-		//using T::operator--;
-		//using T::operator++;
-		//using T::operator+;
-		//using T::operator+=;
-		//using T::operator-;
-		//using T::operator-=;
-		//using T::operator[];
-
 		IterWrapper() = default;
 		explicit IterWrapper(const T& other)
 			: T(other)
@@ -120,17 +201,17 @@ namespace mwaack::detail
 			return *reinterpret_cast<std::pair<U1, U2>*>(&T::operator*());
 		}
 
-		const std::pair<U1, U2>& operator*() const
-		{
-			return *reinterpret_cast<std::pair<U1, U2>*>(&T::operator*());
-		}
-
 		std::pair<U1, U2>* operator->()
 		{
 			return reinterpret_cast<std::pair<U1, U2>*>(&T::operator*());
 		}
 
-		const std::pair<U1, U2>* operator->() const
+		std::pair<U1, U2>& operator*() const
+		{
+			return *reinterpret_cast<std::pair<U1, U2>*>(&T::operator*());
+		}
+
+		std::pair<U1, U2>* operator->() const
 		{
 			return reinterpret_cast<std::pair<U1, U2>*>(&T::operator*());
 		}
@@ -157,9 +238,9 @@ namespace mwaack
 		using pointer = typename MyBase::pointer;
 		using const_pointer = typename MyBase::const_pointer;
 		using iterator = detail::IterWrapper<typename MyBase::iterator, std::pair<const Key, Value>>;
-		using const_iterator = detail::IterWrapper<typename MyBase::const_iterator, std::pair<const Key, Value>>;
-		using reverse_iterator = detail::IterWrapper<typename std::reverse_iterator<iterator>, std::pair<const Key, Value>>;
-		using const_reverse_iterator = detail::IterWrapper<typename std::reverse_iterator<const_iterator>, std::pair<const Key, Value>>;
+		using const_iterator = detail::ConstIterWrapper<typename MyBase::const_iterator, std::pair<const Key, Value>>;
+		using reverse_iterator = std::reverse_iterator<iterator>;
+		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
 		flat_map()
 			: MyBase()
@@ -301,25 +382,27 @@ namespace mwaack
 		template<typename... Args>
 		std::pair<iterator, bool> try_emplace(const key_type& k, Args&&... args)
 		{
-			return this->insert(value_type{ std::piecewise_construct, std::forward_as_tuple(k), std::forward_as_tuple(std::forward<Args>(args)...) });
+			auto ret = this->insert(value_type{ std::piecewise_construct, std::forward_as_tuple(k), std::forward_as_tuple(std::forward<Args>(args)...) });
+			return std::pair<iterator, bool>(iterator(ret.first), ret.second);
 		}
 
 		template<typename... Args>
 		std::pair<iterator, bool> try_emplace(key_type&& k, Args&&... args)
 		{
-			return this->insert(value_type{ std::piecewise_construct, std::forward_as_tuple(std::forward<key_type>(k)), std::forward_as_tuple(std::forward<Args>(args)...) });
+			auto ret = this->insert(value_type{ std::piecewise_construct, std::forward_as_tuple(std::forward<key_type>(k)), std::forward_as_tuple(std::forward<Args>(args)...) });
+			return std::pair<iterator, bool>(iterator(ret.first), ret.second);
 		}
 
 		template<typename... Args>
 		iterator try_emplace(const_iterator hint, const key_type& k, Args&&... args)
 		{
-			return this->insert(hint, value_type{ std::piecewise_construct, std::forward_as_tuple(k), std::forward_as_tuple(std::forward<Args>(args)...) });
+			return iterator(this->insert(hint, value_type{ std::piecewise_construct, std::forward_as_tuple(k), std::forward_as_tuple(std::forward<Args>(args)...) }));
 		}
 
 		template<typename... Args>
 		iterator try_emplace(const_iterator hint, key_type&& k, Args&&... args)
 		{
-			return this->insert(hint, value_type{ std::piecewise_construct, std::forward_as_tuple(std::forward<key_type>(k)), std::forward_as_tuple(std::forward<Args>(args)...) });
+			return iterator(this->insert(hint, value_type{ std::piecewise_construct, std::forward_as_tuple(std::forward<key_type>(k)), std::forward_as_tuple(std::forward<Args>(args)...) }));
 		}
 
 	};
@@ -343,9 +426,9 @@ namespace mwaack
 		using pointer = typename MyBase::pointer;
 		using const_pointer = typename MyBase::const_pointer;
 		using iterator = detail::IterWrapper<typename MyBase::iterator, std::pair<const Key, Value>>;
-		using const_iterator = detail::IterWrapper<typename MyBase::const_iterator, std::pair<const Key, Value>>;
-		using reverse_iterator = detail::IterWrapper<typename std::reverse_iterator<iterator>, std::pair<const Key, Value>>;
-		using const_reverse_iterator = detail::IterWrapper<typename std::reverse_iterator<const_iterator>, std::pair<const Key, Value>>;
+		using const_iterator = detail::ConstIterWrapper<typename MyBase::const_iterator, std::pair<const Key, Value>>;
+		using reverse_iterator = typename std::reverse_iterator<iterator>;
+		using const_reverse_iterator = typename std::reverse_iterator<const_iterator>;
 
 
 		flat_multimap()
