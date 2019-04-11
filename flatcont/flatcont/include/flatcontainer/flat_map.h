@@ -32,7 +32,79 @@ namespace mwaack::detail
 	};
 
 	template <typename T, typename U, typename Enable = void>
-	class IterWrapper
+	class ConstIterWrapper
+	{
+	public:
+		ConstIterWrapper() = delete;
+		ConstIterWrapper(const ConstIterWrapper&) = delete;
+		ConstIterWrapper& operator=(const ConstIterWrapper&) = delete;
+		~ConstIterWrapper() = delete;
+	};
+
+	template <typename T, typename U>
+	class ConstIterWrapper<T, U, std::enable_if_t<std::is_same_v<typename T::value_type, std::remove_const_t<U>>>> : public T
+	{
+	public:
+		using difference_type = typename T::difference_type;
+		using value_type = const U;
+		using pointer = U * ;
+		using reference = U & ;
+		using iterator_category = typename T::iterator_category;
+
+		ConstIterWrapper() = default;
+		explicit ConstIterWrapper(const T& other)
+			: T(other)
+		{
+		}
+		ConstIterWrapper(const ConstIterWrapper&) = default;
+		ConstIterWrapper& operator=(const ConstIterWrapper&) = default;
+		~ConstIterWrapper() = default;
+
+		const U& operator*()
+		{
+			return *reinterpret_cast<U*>(&T::operator*());
+		}
+
+		const U* operator->()
+		{
+			return reinterpret_cast<U*>(&T::operator*());
+		}
+
+	};
+
+	template <typename T, typename U1, typename U2>
+	class ConstIterWrapper<T, std::pair<U1, U2>, typename std::enable_if_t<std::is_same_v<typename T::value_type::first_type, std::remove_cv_t<U1>> && std::is_same_v<typename T::value_type::second_type, std::remove_cv_t<U2>>>> : public T
+	{
+	public:
+		using difference_type = typename T::difference_type;
+		using value_type = std::pair<U1, U2>;
+		using pointer = std::pair<U1, U2>*;
+		using reference = std::pair<U1, U2>&;
+		using iterator_category = typename T::iterator_category;
+
+		ConstIterWrapper() = default;
+		explicit ConstIterWrapper(const T& other)
+			: T(other)
+		{
+		}
+		ConstIterWrapper(const ConstIterWrapper&) = default;
+		ConstIterWrapper& operator=(const ConstIterWrapper&) = default;
+		~ConstIterWrapper() = default;
+
+		const std::pair<U1, U2>& operator*()
+		{
+			return *reinterpret_cast<const std::pair<U1, U2>*>(&T::operator*());
+		}
+
+		const std::pair<U1, U2>* operator->()
+		{
+			return reinterpret_cast<const std::pair<U1, U2>*>(&T::operator*());
+		}
+
+	};
+
+	template <typename T, typename U, typename Enable = void>
+	class IterWrapper : public ConstIterWrapper<T, U, Enable>
 	{
 	public:
 		IterWrapper() = delete;
@@ -40,6 +112,8 @@ namespace mwaack::detail
 		IterWrapper& operator=(const IterWrapper&) = delete;
 		~IterWrapper() = delete;
 	};
+
+	
 
 	template <typename T, typename U>
 	class IterWrapper<T, U, std::enable_if_t<std::is_same_v<typename T::value_type, std::remove_const_t<U>>>> : public T
@@ -66,17 +140,7 @@ namespace mwaack::detail
 			return *reinterpret_cast<U*>(&T::operator*());
 		}
 
-		const U& operator*() const
-		{
-			return *reinterpret_cast<U*>(&T::operator*());
-		}
-
 		U* operator->()
-		{
-			return reinterpret_cast<U*>(&T::operator*());
-		}
-
-		const U* operator->() const
 		{
 			return reinterpret_cast<U*>(&T::operator*());
 		}
@@ -92,20 +156,6 @@ namespace mwaack::detail
 		using reference = std::pair<U1, U2>&;
 		using iterator_category = typename T::iterator_category;
 
-		//using T::operator==;
-		//using T::operator!=;
-		//using T::operator<=;
-		//using T::operator>=;
-		//using T::operator<;
-		//using T::operator>;
-		//using T::operator--;
-		//using T::operator++;
-		//using T::operator+;
-		//using T::operator+=;
-		//using T::operator-;
-		//using T::operator-=;
-		//using T::operator[];
-
 		IterWrapper() = default;
 		explicit IterWrapper(const T& other)
 			: T(other)
@@ -120,17 +170,7 @@ namespace mwaack::detail
 			return *reinterpret_cast<std::pair<U1, U2>*>(&T::operator*());
 		}
 
-		const std::pair<U1, U2>& operator*() const
-		{
-			return *reinterpret_cast<std::pair<U1, U2>*>(&T::operator*());
-		}
-
 		std::pair<U1, U2>* operator->()
-		{
-			return reinterpret_cast<std::pair<U1, U2>*>(&T::operator*());
-		}
-
-		const std::pair<U1, U2>* operator->() const
 		{
 			return reinterpret_cast<std::pair<U1, U2>*>(&T::operator*());
 		}
@@ -320,6 +360,54 @@ namespace mwaack
 		iterator try_emplace(const_iterator hint, key_type&& k, Args&&... args)
 		{
 			return this->insert(hint, value_type{ std::piecewise_construct, std::forward_as_tuple(std::forward<key_type>(k)), std::forward_as_tuple(std::forward<Args>(args)...) });
+		}
+
+		mapped_type& at(const key_type& key)
+		{
+			if (auto found = this->find(key); found != this->end())
+			{
+				return found->second;
+			}
+			else
+			{
+				throw std::out_of_range("element does not exist");
+			}
+		}
+
+		const mapped_type& at(const key_type& key) const
+		{
+			if (auto found = this->find(key); found != this->end())
+			{
+				return found->second;
+			}
+			else
+			{
+				throw std::out_of_range("element does not exist");
+			}
+		}
+
+		mapped_type& operator[](const key_type& key)
+		{
+			if (auto found = this->find(key); found != this->end())
+			{
+				return found->second;
+			}
+			else
+			{
+				return this->emplace(key, mapped_type()).first->second;
+			}
+		}
+
+		mapped_type& operator[](key_type&& key)
+		{
+			if (auto found = this->find(key); found != this->end())
+			{
+				return found->second;
+			}
+			else
+			{
+				return this->emplace(std::move(key), mapped_type()).first->second;
+			}
 		}
 
 	};

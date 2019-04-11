@@ -3,6 +3,7 @@
 #include "benchmark/benchmark.h"
 #include "include/flatcontainer/flat_set.h"
 #include <include/flatcontainer/flat_map.h>
+#include "include/flatcontainer/Primes.h"
 #include <set>
 #include <iostream>
 
@@ -305,6 +306,17 @@ static void MapErase(benchmark::State& state)
 // Register the function as a benchmark
 BENCHMARK(MapErase);
 
+static void Primes(benchmark::State& state)
+{
+	size_t n = state.range(0);
+	for (auto _ : state)
+	{
+		auto p = mwaack::Primes::getPrime(n);
+		benchmark::DoNotOptimize(p);
+	}
+}
+// Register the function as a benchmark
+BENCHMARK(Primes)->RangeMultiplier(2)->Range(1, 8<<16);
 
 
 int main(int argc, char** argv)

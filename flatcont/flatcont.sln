@@ -9,11 +9,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "flatcont-WINDOWS", "flatcon
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "flatcont-WINDOWS_TEST", "flatcont-WINDOWS_TEST\flatcont-WINDOWS_TEST.vcxproj", "{D7A505A1-E6FC-416F-A3E9-F84EF6D4C506}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnitTest1", "UnitTest1\UnitTest1.vcxproj", "{EA8722A2-D6A0-42AF-927A-076DBB64FD60}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		flatcont\flatcont.vcxitems*{3160ca26-de58-4ba9-b4ac-79c3c7fbaa4a}*SharedItemsImports = 9
 		flatcont\flatcont.vcxitems*{a84cfe9c-3356-4c65-95c8-8e78760fc809}*SharedItemsImports = 4
 		flatcont\flatcont.vcxitems*{d7a505a1-e6fc-416f-a3e9-f84ef6d4c506}*SharedItemsImports = 4
+		flatcont\flatcont.vcxitems*{ea8722a2-d6a0-42af-927a-076dbb64fd60}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -38,6 +41,14 @@ Global
 		{D7A505A1-E6FC-416F-A3E9-F84EF6D4C506}.Release|x64.Build.0 = Release|x64
 		{D7A505A1-E6FC-416F-A3E9-F84EF6D4C506}.Release|x86.ActiveCfg = Release|Win32
 		{D7A505A1-E6FC-416F-A3E9-F84EF6D4C506}.Release|x86.Build.0 = Release|Win32
+		{EA8722A2-D6A0-42AF-927A-076DBB64FD60}.Debug|x64.ActiveCfg = Debug|x64
+		{EA8722A2-D6A0-42AF-927A-076DBB64FD60}.Debug|x64.Build.0 = Debug|x64
+		{EA8722A2-D6A0-42AF-927A-076DBB64FD60}.Debug|x86.ActiveCfg = Debug|Win32
+		{EA8722A2-D6A0-42AF-927A-076DBB64FD60}.Debug|x86.Build.0 = Debug|Win32
+		{EA8722A2-D6A0-42AF-927A-076DBB64FD60}.Release|x64.ActiveCfg = Release|x64
+		{EA8722A2-D6A0-42AF-927A-076DBB64FD60}.Release|x64.Build.0 = Release|x64
+		{EA8722A2-D6A0-42AF-927A-076DBB64FD60}.Release|x86.ActiveCfg = Release|Win32
+		{EA8722A2-D6A0-42AF-927A-076DBB64FD60}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

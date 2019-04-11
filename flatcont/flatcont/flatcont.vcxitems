@@ -14,8 +14,10 @@
     <ProjectCapability Include="SourceItemsFromImports" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\flatcontainer\flat_hash_table.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\flatcontainer\flat_map.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\flatcontainer\flat_set.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\flatcontainer\flat_tree.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\flatcontainer\Primes.h" />
   </ItemGroup>
 </Project>
