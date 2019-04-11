@@ -65,14 +65,16 @@ namespace mwaack
 		flat_tree(InputIt first, InputIt last, const CompareI& comp = CompareI(), const Allocator& alloc = Allocator())
 			: m_data(comp, alloc)
 		{
-			std::copy(first, last, std::inserter(*this, end()));
+			std::copy(first, last, std::inserter(m_data, m_data.end()));
+			std::sort(m_data.begin(), m_data.end(), m_value_comp);
 		}
 
 		template< class InputIt >
 		flat_tree(InputIt first, InputIt last, const Allocator& alloc = Allocator())
 			: m_data(alloc)
 		{
-			std::copy(first, last, std::inserter(*this, end()));
+			std::copy(first, last, std::inserter(m_data, m_data.end()));
+			std::sort(m_data.begin(), m_data.end(), m_value_comp);
 		}
 
 		flat_tree(const flat_tree& other)
@@ -305,7 +307,7 @@ namespace mwaack
 		template<typename... Args>
 		auto emplace(Args&&... args)
 		{
-			return insert(value_type( std::forward<Args>(args)... ));
+			return insert(value_type{ std::forward<Args>(args)... });
 		}
 
 		template<typename... Args>
